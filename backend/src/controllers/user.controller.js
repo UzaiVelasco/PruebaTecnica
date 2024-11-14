@@ -18,7 +18,7 @@ const upload = multer({ storage });
 // Controlador para obtener todos los usuarios
 const getUsers = async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM users");
+    const result = await pool.query("SELECT * FROM usuarios");
     res.json(result.rows);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -30,7 +30,9 @@ const getUserById = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const result = await pool.query("SELECT * FROM users WHERE id = $1", [id]);
+    const result = await pool.query("SELECT * FROM usuarios WHERE id = $1", [
+      id,
+    ]);
     if (result.rows.length === 0)
       return res.status(404).json({ message: "Usuario no encontrado" });
 
@@ -43,39 +45,101 @@ const getUserById = async (req, res) => {
 // Controlador para crear usuario
 const createUser = async (req, res) => {
   const {
-    name,
-    email,
+    nombre,
+    apellido,
+    correo,
     password,
-    role,
+    rol,
     rfc,
     curp,
-    street,
-    neighborhood,
-    municipality,
-    postal_code,
-    number,
+    calle,
+    colonia,
+    municipio,
+    codigo_postal,
+    numero,
   } = req.body;
   const hashedPassword = await bcrypt.hash(password, 10);
 
   try {
     const result = await pool.query(
-      "INSERT INTO users (name, email, password, role, rfc, curp, street, neighborhood, municipality, postal_code, number, image_url) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *",
+      "INSERT INTO usuarios (nombre, apellido, correo, password, rol, rfc, curp, calle, colonia, municipio, codigo_postal, numero, url_imagen) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING *",
       [
-        name,
-        email,
+        nombre,
+        apellido,
+        correo,
         hashedPassword,
-        role,
+        rol,
         rfc,
         curp,
-        street,
-        neighborhood,
-        municipality,
-        postal_code,
-        number,
-        req.file.path,
+        calle,
+        colonia,
+        municipio,
+        codigo_postal,
+        numero,
+        req.file ? req.file.path : null,
       ]
     );
     res.status(201).json(result.rows[0]);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Controlador para registrar usuario
+const registerUser = async (req, res) => {
+  const {
+    nombre,
+    apellido,
+    correo,
+    password,
+    rol,
+    rfc,
+    curp,
+    calle,
+    colonia,
+    municipio,
+    codigo_postal,
+    numero,
+  } = req.body;
+
+  // Validar si el correo ya existe en la base de datos
+  try {
+    const userExists = await pool.query(
+      "SELECT * FROM usuarios WHERE correo = $1",
+      [correo]
+    );
+    if (userExists.rows.length > 0) {
+      return res
+        .status(400)
+        .json({ message: "El correo electrónico ya está registrado" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Guardar el nuevo usuario
+    const result = await pool.query(
+      "INSERT INTO usuarios (nombre, apellido, correo, password, rol, rfc, curp, calle, colonia, municipio, codigo_postal, numero, url_imagen) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING *",
+      [
+        nombre,
+        apellido,
+        correo,
+        hashedPassword,
+        rol,
+        rfc,
+        curp,
+        calle,
+        colonia,
+        municipio,
+        codigo_postal,
+        numero,
+        req.file ? req.file.path : null, // Si hay imagen, la guardamos en Cloudinary
+      ]
+    );
+
+    res.status(201).json({
+      message: "Usuario registrado exitosamente",
+      user: result.rows[0],
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -153,12 +217,13 @@ const deleteUser = async (req, res) => {
 
 // Controlador de inicio de sesión
 const loginUser = async (req, res) => {
-  const { email, password } = req.body;
+  const { correo, password } = req.body;
 
   try {
-    const result = await pool.query("SELECT * FROM users WHERE email = $1", [
-      email,
-    ]);
+    const result = await pool.query(
+      "SELECT * FROM usuarios WHERE correo = $1",
+      [correo]
+    );
     if (result.rows.length === 0)
       return res.status(400).json({ message: "Usuario no encontrado" });
 
@@ -168,7 +233,7 @@ const loginUser = async (req, res) => {
     if (!isMatch)
       return res.status(400).json({ message: "Contraseña incorrecta" });
 
-    const token = jwt.sign({ userId: user.id, role: user.role }, jwtSecret, {
+    const token = jwt.sign({ userId: user.id, role: user.rol }, jwtSecret, {
       expiresIn: "1h",
     });
     res.json({ token });
@@ -179,6 +244,7 @@ const loginUser = async (req, res) => {
 
 module.exports = {
   createUser,
+  registerUser,
   loginUser,
   upload,
   updateUser,
