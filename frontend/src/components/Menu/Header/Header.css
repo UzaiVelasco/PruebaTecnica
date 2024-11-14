@@ -1,0 +1,10 @@
+.principal {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    height: 85px;
+    background-color: rgba(248, 245, 245, 0.954) !important;
+    padding: 0 10px;
+    box-sizing: border-box;
+  }

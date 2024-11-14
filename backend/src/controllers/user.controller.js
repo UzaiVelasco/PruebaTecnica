@@ -5,7 +5,6 @@ const { cloudinary, jwtSecret } = require("../config");
 const multer = require("multer");
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 
-// Configurar Multer para almacenar en Cloudinary
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
@@ -15,7 +14,30 @@ const storage = new CloudinaryStorage({
 });
 const upload = multer({ storage });
 
-// Controlador para obtener todos los usuarios
+const getMe = async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) {
+      return res.status(401).json({ message: "No autorizado" });
+    }
+    const decoded = jwt.verify(token, jwtSecret);
+    const userId = decoded.userId;
+
+    const result = await pool.query("SELECT * FROM usuarios WHERE id = $1", [
+      userId,
+    ]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error al obtener los datos del usuario" });
+  }
+};
+
 const getUsers = async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM usuarios");
@@ -25,10 +47,8 @@ const getUsers = async (req, res) => {
   }
 };
 
-// Controlador para obtener un usuario por ID
 const getUserById = async (req, res) => {
   const { id } = req.params;
-
   try {
     const result = await pool.query("SELECT * FROM usuarios WHERE id = $1", [
       id,
@@ -42,7 +62,6 @@ const getUserById = async (req, res) => {
   }
 };
 
-// Controlador para crear usuario
 const createUser = async (req, res) => {
   const {
     nombre,
@@ -57,12 +76,16 @@ const createUser = async (req, res) => {
     municipio,
     codigo_postal,
     numero,
+    hobbies,
   } = req.body;
+
   const hashedPassword = await bcrypt.hash(password, 10);
 
   try {
     const result = await pool.query(
-      "INSERT INTO usuarios (nombre, apellido, correo, password, rol, rfc, curp, calle, colonia, municipio, codigo_postal, numero, url_imagen) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING *",
+      `INSERT INTO usuarios (nombre, apellido, correo, password, rol, rfc, curp, calle, colonia, municipio, codigo_postal, numero, url_imagen)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+       RETURNING *`,
       [
         nombre,
         apellido,
@@ -79,13 +102,25 @@ const createUser = async (req, res) => {
         req.file ? req.file.path : null,
       ]
     );
-    res.status(201).json(result.rows[0]);
+
+    const userId = result.rows[0].id;
+
+    if (hobbies && hobbies.length > 0) {
+      const insertHobbiesQuery = `
+        INSERT INTO usuario_hobbies (usuario_id, hobbie_id)
+        VALUES ${hobbies
+          .map((_, index) => `(${userId}, $${index + 1})`)
+          .join(", ")}
+      `;
+      await pool.query(insertHobbiesQuery, hobbies);
+    }
+
+    res.status(201).json({ message: "Usuario creado con hobbies", userId });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// Controlador para registrar usuario
 const registerUser = async (req, res) => {
   const {
     nombre,
@@ -100,9 +135,9 @@ const registerUser = async (req, res) => {
     municipio,
     codigo_postal,
     numero,
+    hobbies,
   } = req.body;
 
-  // Validar si el correo ya existe en la base de datos
   try {
     const userExists = await pool.query(
       "SELECT * FROM usuarios WHERE correo = $1",
@@ -113,12 +148,12 @@ const registerUser = async (req, res) => {
         .status(400)
         .json({ message: "El correo electrónico ya está registrado" });
     }
-
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Guardar el nuevo usuario
     const result = await pool.query(
-      "INSERT INTO usuarios (nombre, apellido, correo, password, rol, rfc, curp, calle, colonia, municipio, codigo_postal, numero, url_imagen) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING *",
+      `INSERT INTO usuarios 
+      (nombre, apellido, correo, password, rol, rfc, curp, calle, colonia, municipio, codigo_postal, numero, url_imagen) 
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) 
+      RETURNING *`,
       [
         nombre,
         apellido,
@@ -132,20 +167,30 @@ const registerUser = async (req, res) => {
         municipio,
         codigo_postal,
         numero,
-        req.file ? req.file.path : null, // Si hay imagen, la guardamos en Cloudinary
+        req.file ? req.file.path : null,
       ]
     );
 
+    const userId = result.rows[0].id;
+
+    if (hobbies && hobbies.length > 0) {
+      const hobbyValues = hobbies
+        .map((hobbyId) => `(${userId}, ${hobbyId})`)
+        .join(", ");
+      await pool.query(
+        `INSERT INTO usuario_hobbies (usuario_id, hobbie_id) VALUES ${hobbyValues}`
+      );
+    }
     res.status(201).json({
       message: "Usuario registrado exitosamente",
       user: result.rows[0],
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Error al registrar usuario:", error);
+    res.status(500).json({ message: "Error al registrar usuario" });
   }
 };
 
-// Controlador para actualizar usuario
 const updateUser = async (req, res) => {
   const { id } = req.params;
   const {
@@ -160,6 +205,7 @@ const updateUser = async (req, res) => {
     municipio,
     codigo_postal,
     numero,
+    hobbies,
   } = req.body;
 
   try {
@@ -175,28 +221,42 @@ const updateUser = async (req, res) => {
       municipio,
       codigo_postal,
       numero,
-      req.file ? req.file.path : null, // Si se carga una nueva imagen, se usa req.file.path; de lo contrario, se mantiene la imagen actual
+      req.file ? req.file.path : null,
     ];
 
     const query = `
-        UPDATE usuarios 
-        SET nombre = $1, apellido = $2, correo = $3, rol = $4, rfc = $5, curp = $6, calle = $7, colonia = $8, municipio = $9, codigo_postal = $10, numero = $11, url_imagen = COALESCE($12, url_imagen)
-        WHERE id = $13
-        RETURNING *
-      `;
-
+      UPDATE usuarios 
+      SET nombre = $1, apellido = $2, correo = $3, rol = $4, rfc = $5, curp = $6, calle = $7, colonia = $8, municipio = $9, codigo_postal = $10, numero = $11, url_imagen = COALESCE($12, url_imagen)
+      WHERE id = $13
+      RETURNING *
+    `;
     const result = await pool.query(query, [...camposActualizados, id]);
 
-    if (result.rows.length === 0)
+    if (result.rows.length === 0) {
       return res.status(404).json({ message: "Usuario no encontrado" });
+    }
 
-    res.json(result.rows[0]);
+    if (hobbies && hobbies.length > 0) {
+      await pool.query("DELETE FROM usuario_hobbies WHERE usuario_id = $1", [
+        id,
+      ]);
+      const hobbyQueries = hobbies.map((hobbyId) => {
+        return pool.query(
+          "INSERT INTO usuario_hobbies (usuario_id, hobbie_id) VALUES ($1, $2)",
+          [id, hobbyId]
+        );
+      });
+      await Promise.all(hobbyQueries);
+    }
+    res.json({
+      message: "Usuario y hobbies actualizados exitosamente",
+      user: result.rows[0],
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// Controlador para eliminar usuario
 const deleteUser = async (req, res) => {
   const { id } = req.params;
 
@@ -215,7 +275,6 @@ const deleteUser = async (req, res) => {
   }
 };
 
-// Controlador de inicio de sesión
 const loginUser = async (req, res) => {
   const { correo, password } = req.body;
 
@@ -251,4 +310,5 @@ module.exports = {
   deleteUser,
   getUsers,
   getUserById,
+  getMe,
 };
