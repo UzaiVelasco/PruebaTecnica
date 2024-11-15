@@ -63,18 +63,12 @@ h3 {
 }
 
 .botonEnviar {
-  background-color: #008e86 !important;
+  background-color: #2e78d9 !important;
   color: white !important;
   margin-bottom: 15px !important;
   margin-top: 15px !important;
 }
 
-.botonEliminar {
-  background-color: #c50000 !important;
-  color: white !important;
-  margin-bottom: 15px !important;
-  margin-top: 15px !important;
-}
 
 @media screen and (max-width: 768px) {
   .datos > * {

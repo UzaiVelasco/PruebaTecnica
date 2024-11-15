@@ -108,7 +108,7 @@ function Sidebarm({ closeOpen, setCloseOpen }) {
                 active={pathname === "/gestion-personal"}
                 onClick={() => handleItemClick("Gestion-personal")}
               >
-                <Icon name="user"></Icon>Gestion del personal
+                <Icon name="users"></Icon>Gestion del personal
               </Menu.Item>
             )}
           <Menu.Item onClick={handleLogout}>

@@ -60,65 +60,6 @@ const getUserById = async (req, res) => {
   }
 };
 
-const createUser = async (req, res) => {
-  const {
-    nombre,
-    apellido,
-    correo,
-    password,
-    rol,
-    rfc,
-    curp,
-    calle,
-    colonia,
-    municipio,
-    codigo_postal,
-    numero,
-    hobbies,
-  } = req.body;
-
-  const hashedPassword = await bcrypt.hash(password, 10);
-
-  try {
-    const result = await pool.query(
-      `INSERT INTO usuarios (nombre, apellido, correo, password, rol, rfc, curp, calle, colonia, municipio, codigo_postal, numero, url_imagen)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-       RETURNING *`,
-      [
-        nombre,
-        apellido,
-        correo,
-        hashedPassword,
-        rol,
-        rfc,
-        curp,
-        calle,
-        colonia,
-        municipio,
-        codigo_postal,
-        numero,
-        req.file ? req.file.path : null,
-      ]
-    );
-
-    const userId = result.rows[0].id;
-
-    if (hobbies && hobbies.length > 0) {
-      const insertHobbiesQuery = `
-        INSERT INTO usuario_hobbies (usuario_id, hobbie_id)
-        VALUES ${hobbies
-          .map((_, index) => `(${userId}, $${index + 1})`)
-          .join(", ")}
-      `;
-      await pool.query(insertHobbiesQuery, hobbies);
-    }
-
-    res.status(201).json({ message: "Usuario creado con hobbies", userId });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
 const registerUser = async (req, res) => {
   const {
     nombre,
@@ -130,10 +71,10 @@ const registerUser = async (req, res) => {
     curp,
     calle,
     colonia,
-    municipio,
     codigo_postal,
     numero,
     hobbies,
+    url_imagen,
   } = req.body;
 
   try {
@@ -171,8 +112,8 @@ const registerUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const result = await pool.query(
       `INSERT INTO usuarios 
-      (nombre, apellido, correo, password, rol, rfc, curp, calle, colonia, municipio, codigo_postal, numero, url_imagen) 
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) 
+      (nombre, apellido, correo, password, rol, rfc, curp, calle, colonia, codigo_postal, numero, url_imagen) 
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) 
       RETURNING *`,
       [
         nombre,
@@ -184,10 +125,9 @@ const registerUser = async (req, res) => {
         curp,
         calle,
         colonia,
-        municipio,
         codigo_postal,
         numero,
-        req.file ? req.file.path : null,
+        url_imagen,
       ]
     );
 
@@ -222,7 +162,6 @@ const updateUser = async (req, res) => {
     curp,
     calle,
     colonia,
-    municipio,
     codigo_postal,
     numero,
     hobbies,
@@ -236,11 +175,9 @@ const updateUser = async (req, res) => {
         [correo, id]
       );
       if (emailExists.rows.length > 0) {
-        return res
-          .status(400)
-          .json({
-            message: "El correo electrónico ya está registrado en otro usuario",
-          });
+        return res.status(400).json({
+          message: "El correo electrónico ya está registrado en otro usuario",
+        });
       }
     }
 
@@ -279,7 +216,6 @@ const updateUser = async (req, res) => {
       curp,
       calle,
       colonia,
-      municipio,
       codigo_postal,
       numero,
       req.file ? req.file.path : null,
@@ -287,8 +223,8 @@ const updateUser = async (req, res) => {
 
     const query = `
       UPDATE usuarios 
-      SET nombre = $1, apellido = $2, correo = $3, rol = $4, rfc = $5, curp = $6, calle = $7, colonia = $8, municipio = $9, codigo_postal = $10, numero = $11, url_imagen = COALESCE($12, url_imagen)
-      WHERE id = $13
+      SET nombre = $1, apellido = $2, correo = $3, rol = $4, rfc = $5, curp = $6, calle = $7, colonia = $8, codigo_postal = $9, numero = $10, url_imagen = COALESCE($11, url_imagen)
+      WHERE id = $12
       RETURNING *
     `;
     const result = await pool.query(query, [...camposActualizados, id]);
@@ -364,7 +300,6 @@ const loginUser = async (req, res) => {
 };
 
 module.exports = {
-  createUser,
   registerUser,
   loginUser,
   upload,

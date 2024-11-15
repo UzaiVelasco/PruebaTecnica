@@ -14,7 +14,7 @@ function RegistroPersonal() {
 
 function LogicaPersonal() {
   return (
-    <div>
+    <div className="container">
       <h1 className="tituloin">Registrar personal </h1>
       <FormPersonal />
     </div>

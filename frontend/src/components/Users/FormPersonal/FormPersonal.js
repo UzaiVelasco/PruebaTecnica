@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { Form, Button, Dropdown, Checkbox } from "semantic-ui-react";
+import { Form, Button, Dropdown } from "semantic-ui-react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import axios from "axios";
+import { useLocation } from "react-router-dom";
 import { useAuth } from "../../../hooks/userAuth";
 import { ToastContainer, toast } from "react-toastify";
 import { BASE_API } from "../../../server/BASE_API";
+import { Navigate } from "react-router-dom";
+import { map } from "lodash";
+
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "./FormPersonal.css";
-import { map } from "lodash";
 import {
   MapContainer,
   TileLayer,
@@ -18,20 +21,33 @@ import {
   useMapEvents,
 } from "react-leaflet";
 import "leaflet-control-geocoder/dist/Control.Geocoder.js";
+import Cropper from "react-cropper";
+import "cropperjs/dist/cropper.css";
 
-export function FormPersonal(props) {
+export function FormPersonal() {
+  const { auth } = useAuth();
+  const location = useLocation();
+  const personal = location.state?.usuario;
+  if (auth?.me?.rol !== "admin") {
+    return <Navigate to={"/"}></Navigate>;
+  }
+  return <LogicaFormPersonal personal={personal} />;
+}
+
+function LogicaFormPersonal(props) {
   const { personal } = props;
   const [refetch] = useState(false);
   const { auth } = useAuth();
   const [hobbies, setHobbies] = useState(null);
   const [hobbiesFormato, setHobbiesFormato] = useState([]);
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [personalRegistrado, setPersonalRegistrado] = useState(null);
+  const [image, setImage] = useState(null);
+  const [croppedImage, setCroppedImage] = useState(null);
 
   const [address, setAddress] = useState({
     colonia: "",
-    cp: "",
+    codigo_postal: "",
     lat: 17.0676,
     lon: -96.7219,
   });
@@ -40,19 +56,22 @@ export function FormPersonal(props) {
     calle: false,
     numero: false,
     colonia: false,
-    cp: false,
+    codigo_postal: false,
   });
 
-  // Crear un divIcon de Leaflet con un ícono HTML de Semantic UI
+  const rolOptions = [
+    { key: "admin", text: "Admin", value: "admin" },
+    { key: "auxiliar", text: "Auxiliar", value: "auxiliar" },
+  ];
+
   const customIcon = new L.divIcon({
-    className: "leaflet-div-icon", // Mantiene la clase base para la gestión del ícono
-    html: `<i class="big map pin icon" style="color: #008e86;"></i>`, // Usamos el ícono "pin" de Semantic UI
-    iconSize: [32, 32], // Tamaño del ícono
-    iconAnchor: [16, 32], // Ancla del ícono
-    popupAnchor: [0, -32], // Ancla para la ventana emergente
+    className: "leaflet-div-icon",
+    html: `<i class="big map pin icon" style="color: #008e86;"></i>`,
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32],
   });
 
-  // Función que maneja clics en el mapa y actualiza la dirección
   const handleMapClick = (event) => {
     const { lat, lng } = event.latlng;
     setAddress((prevState) => ({
@@ -61,7 +80,6 @@ export function FormPersonal(props) {
       lon: lng,
     }));
 
-    // Llamada a Nominatim para obtener la dirección
     axios
       .get(
         `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`
@@ -69,19 +87,18 @@ export function FormPersonal(props) {
       .then((response) => {
         const { address } = response.data;
         const newAddress = {
-          lat, // Coordenadas actualizadas
+          lat,
           lon: lng,
           calle: address.road || "",
           numero: address.house_number || "",
           colonia: address.suburb || address.neighbourhood || "",
-          cp: address.postcode || "",
+          codigo_postal: address.postcode || "",
         };
-        setAddress(newAddress); // Actualizamos el estado con la nueva dirección
+        setAddress(newAddress);
       })
       .catch((err) => console.log(err));
   };
 
-  // Geocodificación inversa cuando el usuario escribe manualmente la dirección
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setIsModified((prev) => ({
@@ -90,10 +107,10 @@ export function FormPersonal(props) {
     }));
     formik.handleChange(e);
 
-    if (name === "calle" || name === "cp" || name === "colonia") {
+    if (name === "calle" || name === "codigo_postal" || name === "colonia") {
       axios
         .get(
-          `https://nominatim.openstreetmap.org/search?street=${formik.values.calle}&postalcode=${formik.values.cp}&city=${formik.values.colonia}&format=json`
+          `https://nominatim.openstreetmap.org/search?street=${formik.values.calle}&postalcode=${formik.values.codigo_postal}&city=${formik.values.colonia}&format=json`
         )
         .then((response) => {
           if (response.data && response.data[0]) {
@@ -102,7 +119,7 @@ export function FormPersonal(props) {
               ...prevState,
               lat,
               lon,
-              colonia: formik.values.colonia, // Actualiza la colonia también
+              colonia: formik.values.colonia,
             }));
           }
         })
@@ -157,7 +174,7 @@ export function FormPersonal(props) {
     try {
       const result = await createUserApi(data, auth.token);
       setPersonalRegistrado(result);
-      return result.id; // Devolver el ID del alumno registrado
+      return result.id;
     } catch (error) {
       throw error;
     }
@@ -166,7 +183,7 @@ export function FormPersonal(props) {
   const updateUser = async (alumnoId, data) => {
     try {
       await updateUserApi(alumnoId, data, auth.token);
-      return alumnoId; // Devolver el ID del alumno actualizado
+      return alumnoId;
     } catch (error) {
       throw error;
     }
@@ -180,7 +197,6 @@ export function FormPersonal(props) {
 
   async function createUserApi(data) {
     try {
-      setLoading(true);
       const url = `${BASE_API}/register/`;
       const headers = {
         Authorization: `Bearer ${auth.token}`,
@@ -189,10 +205,9 @@ export function FormPersonal(props) {
       const response = await axios.post(url, data, { headers });
       const result = response.data;
       setPersonalRegistrado(result);
-      setLoading(false);
+      window.location.reload();
       return result;
     } catch (error) {
-      setLoading(false);
       if (error.response && error.response.status === 400) {
         toast.error(error.response.data.message || "Algo salió mal");
       }
@@ -239,6 +254,8 @@ export function FormPersonal(props) {
   const formik = useFormik({
     initialValues: {
       ...address,
+      rol: "",
+      hobbies: [],
     },
     validationSchema: Yup.object(personal ? updateSquema() : newSchema()),
     validateOnChange: false,
@@ -247,27 +264,46 @@ export function FormPersonal(props) {
         formValue.nombre = formatName(formValue.nombre);
         formValue.apellido = formatName(formValue.apellido);
         formValue.curp = formValue.curp.toUpperCase();
+
+        if (croppedImage) {
+          const formData = new FormData();
+          formData.append("file", croppedImage);
+          formData.append("upload_preset", "registro");
+
+          const cloudinaryResponse = await axios.post(
+            "https://api.cloudinary.com/v1_1/dxxl0fvtw/image/upload",
+            formData
+          );
+          formValue.foto = cloudinaryResponse.data.secure_url;
+        }
         if (personal) await updateUser(personal.id, formValue);
         else await addUser(formValue);
       } catch (error) {}
     },
   });
 
-  // Actualiza los campos del formulario cuando se mueve el puntero del mapa
+  // Actualiza los campos del formulario cuando cambia la dirección en el mapa
   useEffect(() => {
-    if (!isModified.calle) {
-      formik.setFieldValue("calle", address.calle);
+    // Solo actualiza si `address` tiene datos válidos
+    if (address) {
+      if (!isModified.calle && formik.values.calle !== address.calle) {
+        formik.setFieldValue("calle", address.calle || "");
+      }
+      if (!isModified.numero && formik.values.numero !== address.numero) {
+        formik.setFieldValue("numero", address.numero || "");
+      }
+      if (!isModified.colonia && formik.values.colonia !== address.colonia) {
+        formik.setFieldValue("colonia", address.colonia || "");
+      }
+      if (
+        !isModified.cp &&
+        formik.values.codigo_postal !== address.codigo_postal
+      ) {
+        formik.setFieldValue("codigo_postal", address.codigo_postal || "");
+      }
     }
-    if (!isModified.numero) {
-      formik.setFieldValue("numero", address.numero);
-    }
-    if (!isModified.colonia) {
-      formik.setFieldValue("colonia", address.colonia);
-    }
-    if (!isModified.cp) {
-      formik.setFieldValue("cp", address.cp);
-    }
-  }, [address, formik, isModified]);
+    // Solo depende de `address` y de los campos `isModified` para evitar renderizados infinitos
+  }, [address, isModified]);
 
   useEffect(() => {
     if (formik.errors) {
@@ -278,6 +314,25 @@ export function FormPersonal(props) {
       }
     }
   }, [formik.isSubmitting, formik.errors]);
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImage(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleCrop = () => {
+    if (cropperRef.current) {
+      setCroppedImage(cropperRef.current.getCroppedCanvas().toDataURL());
+    }
+  };
+
+  let cropperRef = React.createRef();
 
   return (
     <>
@@ -310,7 +365,7 @@ export function FormPersonal(props) {
               </label>
               <Form.Input
                 name="apellido"
-                placeholder="apellido"
+                placeholder="Apellidos"
                 value={formik.values.apellido}
                 onChange={formik.handleChange}
                 error={formik.errors.apellido}
@@ -327,6 +382,21 @@ export function FormPersonal(props) {
                 value={formik.values.correo}
                 onChange={formik.handleChange}
                 error={formik.errors.correo}
+              />
+            </div>
+            <div className="input-field">
+              <label>
+                Rol <span className="astedisco">*</span>
+              </label>
+              <Dropdown
+                name="rol"
+                placeholder="Rol"
+                options={rolOptions}
+                value={formik.values.rol}
+                onChange={(e, { name, value }) =>
+                  formik.setFieldValue(name, value)
+                }
+                selection
               />
             </div>
             <div className="input-field">
@@ -364,16 +434,16 @@ export function FormPersonal(props) {
                 Hobbies <span className="astedisco">*</span>
               </label>
               <Dropdown
-                placeholder="Año del alumno"
+                name="hobbies"
+                placeholder="Selecciona tus hobbies"
                 fluid
+                multiple
                 selection
-                search
                 options={hobbiesFormato}
-                value={formik.values.hobbies}
-                error={formik.errors.hobbies}
-                onChange={(_, datos) => {
-                  formik.setFieldValue("hobbies", datos.value);
-                }}
+                value={formik.values.hobbies || []} // Usa un arreglo vacío si está undefined
+                onChange={(e, { name, value }) =>
+                  formik.setFieldValue(name, value)
+                }
               />
             </div>
 
@@ -418,11 +488,11 @@ export function FormPersonal(props) {
                 Código Postal <span className="astedisco">*</span>
               </label>
               <Form.Input
-                name="cp"
+                name="codigo_postal"
                 placeholder="Código Postal"
-                value={formik.values.cp}
+                value={formik.values.codigo_postal}
                 onChange={handleInputChange}
-                error={formik.errors.cp}
+                error={formik.errors.codigo_postal}
               />
             </div>
             <div className="input-field"></div>
@@ -437,7 +507,7 @@ export function FormPersonal(props) {
                 <Marker position={[address.lat, address.lon]} icon={customIcon}>
                   <Popup>
                     Dirección: {address.calle}, {address.numero},{" "}
-                    {address.colonia}, {address.cp}
+                    {address.colonia}, {address.codigo_postal}
                   </Popup>
                 </Marker>
                 <MapClickHandler />
@@ -446,26 +516,60 @@ export function FormPersonal(props) {
 
             <div className="input-field">
               <label>
-                Contraseña <span className="astedisco">*</span>
+                Foto <span className="astedisco">*</span>
               </label>
-              <Form.Input
-                name="password"
-                type={showPassword ? "text" : "password"}
-                placeholder="Contraseña"
-                value={formik.values.password}
-                onChange={formik.handleChange}
-                error={formik.errors.password}
-                icon={{
-                  name: showPassword ? "eye" : "eye slash",
-                  link: true,
-                  onClick: () => setShowPassword(!showPassword),
-                }}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                name="foto"
               />
+              {image && (
+                <div>
+                  <Cropper
+                    ref={cropperRef}
+                    src={image}
+                    style={{ height: 400, width: "100%" }}
+                    initialAspectRatio={1}
+                    guides={false}
+                    viewMode={1}
+                    scalable={true}
+                  />
+                  <Button type="button" onClick={handleCrop}>
+                    Recortar Imagen
+                  </Button>
+                </div>
+              )}
             </div>
+
+            {!personal && (
+              <div className="input-field">
+                <label>
+                  Contraseña <span className="astedisco">*</span>
+                </label>
+                <Form.Input
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Contraseña"
+                  value={formik.values.password}
+                  onChange={formik.handleChange}
+                  error={formik.errors.password}
+                  icon={{
+                    name: showPassword ? "eye" : "eye slash",
+                    link: true,
+                    onClick: () => setShowPassword(!showPassword),
+                  }}
+                />
+              </div>
+            )}
           </div>
         </div>
         {(personal === undefined && (
-          <Button type="submit" content="Registrar personal" />
+          <Button
+            type="submit"
+            className="botonEnviar"
+            content="Registrar personal"
+          />
         )) ||
           (personal && (
             <Button type="submit" content="Actualizar datos personal" />
@@ -482,6 +586,12 @@ function initialValues(datoPersonal) {
     nombre: datoPersonal?.nombre || "",
     curp: datoPersonal?.curp || "",
     correo: datoPersonal?.correo || "",
+    rol: datoPersonal?.rol || "",
+    rfc: datoPersonal?.rfc || "",
+    calle: datoPersonal?.calle || "",
+    numero: datoPersonal?.numero || "",
+    colonia: datoPersonal?.colonia || "",
+    codigo_postal: datoPersonal?.codigo_postal || "",
   };
 }
 
@@ -513,7 +623,7 @@ function newSchema() {
     calle: Yup.string().required("La calle es requerida"),
     numero: Yup.string().required("El número es requerido"),
     colonia: Yup.string().required("La colonia es requerida"),
-    cp: Yup.string().required("El código postal es requerido"),
+    codigo_postal: Yup.string().required("El código postal es requerido"),
   };
 }
 function updateSquema() {

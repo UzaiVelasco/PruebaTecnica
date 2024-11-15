@@ -1,0 +1,156 @@
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+.recomendacion{
+    color: #002a4c;
+
+}
+
+.table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 20px 0;
+}
+
+.custom-table {
+    width: 100%;
+    border-collapse: collapse;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    font-family: 'Roboto', sans-serif; /* Fuente más formal */
+    opacity: 0; /* Inicia con la tabla oculta */
+    animation: fadeInUp 1s forwards; /* Aplica la animación */
+}
+
+.custom-table th, .custom-table td {
+    padding: 0.6em;
+    border: 1px solid #ddd;
+    text-align: center;
+    transition: background-color 0.3s ease, transform 0.3s ease; /* Transición para color de fondo y transformación */
+}
+
+.custom-table th {
+    background-color:#00468ebf;
+    color: white;
+    font-weight: bold;
+    text-transform: uppercase;
+    transition: background-color 0.3s ease; /* Transición en color de fondo */
+}
+
+.custom-table tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.custom-table tbody tr:hover {
+    background-color: #e1f5f3;
+
+}
+
+.status {
+    font-style: italic;
+}
+
+.buscar {
+    display: flex;
+    gap: 10px; /* Espacio entre los inputs */
+    margin-left: auto; /* Alinea los elementos a la derecha */
+  }
+  
+  .buscar-item {
+    display: flex;
+    align-items: center; /* Alinea el ícono y el input en línea */
+    gap: 5px; /* Espacio entre el icono y el input */
+  }
+  
+  @media (max-width: 600px) {
+    .buscar {
+      flex-direction: column; /* Cambia la dirección de los elementos a vertical en pantallas pequeñas */
+      gap: 5px; /* Reduce el espacio entre los inputs para pantallas pequeñas */
+      align-items: flex-end; /* Alinea los elementos a la derecha en pantallas pequeñas */
+    }
+  }
+  
+  .busper {
+    padding: 0.7em;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9em;
+    margin-left: 10px; 
+    width: 200px; 
+  }
+
+  .bot {
+    color: #007b8a;
+    font-size: 1.2em;
+  }
+
+.buscar input:focus {
+    border-color: #007b8a;
+    outline: none;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 15px;
+}
+
+.pagination-button {
+    border: none;
+    background-color: #007b8a;
+    color: white;
+    padding: 0.5em 1em;
+    margin: 0 5px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color 0.3s ease, transform 0.2s ease; /* Transición en color de fondo y transformación */
+}
+
+.pagination-button.active {
+    background-color: #005f5f;
+}
+
+.pagination-button:hover {
+    background-color: #005f5f;
+    transform: scale(1.05); /* Efecto de aumento al pasar el ratón */
+}
+
+.action-buttons {
+    text-align: center;
+}
+
+.action-button {
+    border: none;
+    background: none;
+    cursor: pointer;
+    margin: 0 5px;
+    font-size: 1.2em;
+    transition: color 0.3s ease, transform 0.2s ease; /* Transición en color y transformación */
+}
+
+.action-button.yellow {
+    color: #f1c40f;
+}
+
+.action-button.red {
+    color: #e74c3c;
+}
+
+.action-button.yellow:hover {
+    color: #d4af37;
+    transform: scale(1.1); /* Efecto de aumento al pasar el ratón */
+}
+
+.action-button.red:hover {
+    color: #c0392b;
+    transform: scale(1.1); /* Efecto de aumento al pasar el ratón */
+}
