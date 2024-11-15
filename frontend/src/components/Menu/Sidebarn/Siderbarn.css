@@ -1,0 +1,94 @@
+.menuc {
+    padding: 7px 20px 0px !important;
+    height: calc(100% - 90px);
+    overflow-y: auto;
+    max-width: 160px !important;
+    position: fixed;
+    top: 65px;
+    z-index: 1000;
+    background-color: rgba(248, 245, 245, 0.954) !important;
+    transition: transform 0.3s ease; /* Transición para el deslizamiento */
+    transform: translateX(0); /* Posición inicial cuando el menú está visible */
+  }
+  
+  .menuc.hidden {
+    transform: translateX(-160px); /* Desliza el menú fuera de la vista cuando está oculto */
+  }
+  
+  .closeOp {
+    background-color: rgba(255, 255, 255, 0) !important;
+    margin-bottom: 12px !important;
+  }
+  
+  .openMenu {
+    top: 80px;
+    z-index: 1000;
+    position: fixed;
+    margin-top: 80px;
+    background-color: #abbed2 !important;
+    color: #ffffff; 
+    border: none; 
+    border-radius: 11% !important; 
+    width: 120px !important; 
+    height: 35px !important; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+    font-size: 16px; 
+    cursor: pointer; 
+    transition: background-color 0.3s, transform 0.3s; 
+  }
+  
+  .openMenu:hover {
+    background-color: #003d72; 
+    transform: scale(1.05); 
+  }
+  
+  
+  .ui.vertical.menu .active.item {
+    background: #00468ebf !important;
+    border-radius: 4px;
+    box-shadow: none;
+    color: #ffffff;
+    max-height: 170px;
+  }
+  
+  .ui.icon.menu .item {
+    color: #545454;
+  }
+  
+  .ui.menu {
+    font-family: "Montserrat-Regular", sans-serif;
+    font-size: 13px;
+  }
+  
+  .ui.vertical.menu .dropdown.item .menu {
+    top: 100% !important;
+    left: 0 !important;
+    margin-top: 0px !important;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.08);
+    border-radius: 0 0.28571429rem 0.28571429rem 0.28571429rem;
+    transform: translateY(20px);
+  }
+  
+  .ui.vertical.menu .menu .item {
+    background: 0 0;
+    padding: 0.5em 1.33333333em;
+    font-size: 13px;
+    color: #545454;
+    background-color: rgb(172 232 234);
+    border-top: 0.6px solid #b0b0b0;
+  }
+  
+  .ui.vertical.menu .item .menu .active.item {
+    background-color: transparent;
+    color: #ffffff;
+    border: 2px solid #ffffff;
+    font-weight: normal !important;
+  }
+  
+  .prio {
+    background-color: #ffffff !important;
+  }
+  

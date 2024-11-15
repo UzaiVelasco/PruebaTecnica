@@ -22,7 +22,6 @@ const getMe = async (req, res) => {
     }
     const decoded = jwt.verify(token, jwtSecret);
     const userId = decoded.userId;
-
     const result = await pool.query("SELECT * FROM usuarios WHERE id = $1", [
       userId,
     ]);
@@ -30,7 +29,6 @@ const getMe = async (req, res) => {
     if (result.rows.length === 0) {
       return res.status(404).json({ message: "Usuario no encontrado" });
     }
-
     res.json(result.rows[0]);
   } catch (error) {
     console.error(error);

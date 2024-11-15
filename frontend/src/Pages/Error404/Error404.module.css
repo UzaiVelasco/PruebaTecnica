@@ -1,0 +1,52 @@
+.contenedor {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-size: 16%;
+    background-color: rgba(255, 255, 255, 0.808);
+    background-blend-mode: lighten;
+    width: 100vw;
+    height: 100vh;
+}
+
+.cuadro {
+    text-align: center;
+    background-color: rgba(255, 251, 251, 0.9);
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btonAc {
+    background-color: #357ABD; 
+    color: white;
+    font-family: 'Montserrat-Regular', sans-serif;
+    font-size: 14px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+.btonAc:hover {
+    background-color: #4a90e2; /* Azul bajo */
+    transform: scale(1.05);
+}
+
+.btonAc:active {
+    background-color: #4a90e2; /* Azul bajo */
+    transform: scale(0.95);
+}
+
+.footer {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 14px;
+    color: #333;
+    font-weight: bold;
+    position: absolute;
+    width: 100%;
+    bottom: 0;
+  }

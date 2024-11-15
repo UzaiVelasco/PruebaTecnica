@@ -20,7 +20,6 @@ export function AuthProvider(props) {
         try {
           await login(token);
         } catch (error) {
-          console.error("Error al obtener los datos del usuario:", error);
           setAuth(null);
         }
       } else {
@@ -33,6 +32,7 @@ export function AuthProvider(props) {
   }, []);
 
   const login = async (token) => {
+    console.log("Token recibido en frontend:", token); // Agregar esto
     setToken(token);
     const me = await getMeApi(token);
     setAuth({ token, me });
