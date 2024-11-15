@@ -6,8 +6,18 @@ import axios from "axios";
 import { useAuth } from "../../../hooks/userAuth";
 import { ToastContainer, toast } from "react-toastify";
 import { BASE_API } from "../../../server/BASE_API";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import "./FormPersonal.css";
 import { map } from "lodash";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Popup,
+  useMapEvents,
+} from "react-leaflet";
+import "leaflet-control-geocoder/dist/Control.Geocoder.js";
 
 export function FormPersonal(props) {
   const { personal } = props;
@@ -16,9 +26,89 @@ export function FormPersonal(props) {
   const [hobbies, setHobbies] = useState(null);
   const [hobbiesFormato, setHobbiesFormato] = useState([]);
   const [showPassword, setShowPassword] = useState(false);
-  // eslint-disable-next-line
   const [loading, setLoading] = useState(true);
   const [personalRegistrado, setPersonalRegistrado] = useState(null);
+
+  const [address, setAddress] = useState({
+    colonia: "",
+    cp: "",
+    lat: 17.0676,
+    lon: -96.7219,
+  });
+
+  const [isModified, setIsModified] = useState({
+    calle: false,
+    numero: false,
+    colonia: false,
+    cp: false,
+  });
+
+  // Crear un divIcon de Leaflet con un ícono HTML de Semantic UI
+  const customIcon = new L.divIcon({
+    className: "leaflet-div-icon", // Mantiene la clase base para la gestión del ícono
+    html: `<i class="big map pin icon" style="color: #008e86;"></i>`, // Usamos el ícono "pin" de Semantic UI
+    iconSize: [32, 32], // Tamaño del ícono
+    iconAnchor: [16, 32], // Ancla del ícono
+    popupAnchor: [0, -32], // Ancla para la ventana emergente
+  });
+
+  // Función que maneja clics en el mapa y actualiza la dirección
+  const handleMapClick = (event) => {
+    const { lat, lng } = event.latlng;
+    setAddress((prevState) => ({
+      ...prevState,
+      lat,
+      lon: lng,
+    }));
+
+    // Llamada a Nominatim para obtener la dirección
+    axios
+      .get(
+        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`
+      )
+      .then((response) => {
+        const { address } = response.data;
+        const newAddress = {
+          lat, // Coordenadas actualizadas
+          lon: lng,
+          calle: address.road || "",
+          numero: address.house_number || "",
+          colonia: address.suburb || address.neighbourhood || "",
+          cp: address.postcode || "",
+        };
+        setAddress(newAddress); // Actualizamos el estado con la nueva dirección
+      })
+      .catch((err) => console.log(err));
+  };
+
+  // Geocodificación inversa cuando el usuario escribe manualmente la dirección
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setIsModified((prev) => ({
+      ...prev,
+      [name]: true,
+    }));
+    formik.handleChange(e);
+
+    if (name === "calle" || name === "cp" || name === "colonia") {
+      axios
+        .get(
+          `https://nominatim.openstreetmap.org/search?street=${formik.values.calle}&postalcode=${formik.values.cp}&city=${formik.values.colonia}&format=json`
+        )
+        .then((response) => {
+          if (response.data && response.data[0]) {
+            const { lat, lon } = response.data[0];
+            setAddress((prevState) => ({
+              ...prevState,
+              lat,
+              lon,
+              colonia: formik.values.colonia, // Actualiza la colonia también
+            }));
+          }
+        })
+        .catch((err) => console.log(err));
+    }
+  };
 
   async function getHobbies() {
     try {
@@ -32,9 +122,16 @@ export function FormPersonal(props) {
       return result;
     } catch (error) {
       window.location.reload();
-      window.location.href = "/Login";
+      window.location.href = "/login";
     }
   }
+  const MapClickHandler = () => {
+    useMapEvents({
+      click: handleMapClick,
+    });
+
+    return null;
+  };
 
   useEffect(() => {
     getHobbies();
@@ -49,8 +146,6 @@ export function FormPersonal(props) {
     if (!hobbies) {
       return [];
     }
-
-    console.log(hobbies);
     return map(hobbies, (item) => ({
       key: item.id,
       text: item.descripcion,
@@ -142,7 +237,9 @@ export function FormPersonal(props) {
   }, [personal, hobbies]);
 
   const formik = useFormik({
-    initialValues,
+    initialValues: {
+      ...address,
+    },
     validationSchema: Yup.object(personal ? updateSquema() : newSchema()),
     validateOnChange: false,
     onSubmit: async (formValue) => {
@@ -155,6 +252,22 @@ export function FormPersonal(props) {
       } catch (error) {}
     },
   });
+
+  // Actualiza los campos del formulario cuando se mueve el puntero del mapa
+  useEffect(() => {
+    if (!isModified.calle) {
+      formik.setFieldValue("calle", address.calle);
+    }
+    if (!isModified.numero) {
+      formik.setFieldValue("numero", address.numero);
+    }
+    if (!isModified.colonia) {
+      formik.setFieldValue("colonia", address.colonia);
+    }
+    if (!isModified.cp) {
+      formik.setFieldValue("cp", address.cp);
+    }
+  }, [address, formik, isModified]);
 
   useEffect(() => {
     if (formik.errors) {
@@ -181,31 +294,7 @@ export function FormPersonal(props) {
           <div className="datos">
             <div className="input-field">
               <label>
-                Apellido paterno <span className="astedisco">*</span>
-              </label>
-              <Form.Input
-                name="apellido_paterno"
-                placeholder="Apellido paterno"
-                value={formik.values.apellido_paterno}
-                onChange={formik.handleChange}
-                error={formik.errors.apellido_paterno}
-              />
-            </div>
-            <div className="input-field">
-              <label>
-                Apellido materno <span className="astedisco">*</span>
-              </label>
-              <Form.Input
-                name="apellido_materno"
-                placeholder="Apellido materno"
-                value={formik.values.apellido_materno}
-                onChange={formik.handleChange}
-                error={formik.errors.apellido_materno}
-              />
-            </div>
-            <div className="input-field">
-              <label>
-                Nombre <span className="astedisco">*</span>
+                Nombre(s) <span className="astedisco">*</span>
               </label>
               <Form.Input
                 name="nombre"
@@ -217,6 +306,19 @@ export function FormPersonal(props) {
             </div>
             <div className="input-field">
               <label>
+                Apellidos <span className="astedisco">*</span>
+              </label>
+              <Form.Input
+                name="apellido"
+                placeholder="apellido"
+                value={formik.values.apellido}
+                onChange={formik.handleChange}
+                error={formik.errors.apellido}
+              />
+            </div>
+
+            <div className="input-field">
+              <label>
                 Correo electrónico <span className="astedisco">*</span>
               </label>
               <Form.Input
@@ -225,19 +327,6 @@ export function FormPersonal(props) {
                 value={formik.values.correo}
                 onChange={formik.handleChange}
                 error={formik.errors.correo}
-              />
-            </div>
-            <div className="input-field">
-              <label>
-                Fecha de nacimiento <span className="astedisco">*</span>
-              </label>
-              <Form.Input
-                name="fecha_nacimiento"
-                type="date"
-                placeholder="Fecha de nacimiento"
-                value={formik.values.fecha_nacimiento}
-                error={formik.errors.fecha_nacimiento}
-                onChange={formik.handleChange}
               />
             </div>
             <div className="input-field">
@@ -287,6 +376,74 @@ export function FormPersonal(props) {
                 }}
               />
             </div>
+
+            <div className="input-field">
+              <label>
+                Calle <span className="astedisco">*</span>
+              </label>
+              <Form.Input
+                name="calle"
+                placeholder="Calle"
+                value={formik.values.calle}
+                onChange={handleInputChange}
+                error={formik.errors.calle}
+              />
+            </div>
+            <div className="input-field">
+              <label>
+                Número <span className="astedisco">*</span>
+              </label>
+              <Form.Input
+                name="numero"
+                placeholder="Número"
+                value={formik.values.numero}
+                onChange={handleInputChange}
+                error={formik.errors.numero}
+              />
+            </div>
+            <div className="input-field">
+              <label>
+                Colonia <span className="astedisco">*</span>
+              </label>
+              <Form.Input
+                name="colonia"
+                placeholder="Colonia"
+                value={formik.values.colonia}
+                onChange={handleInputChange}
+                error={formik.errors.colonia}
+              />
+            </div>
+            <div className="input-field">
+              <label>
+                Código Postal <span className="astedisco">*</span>
+              </label>
+              <Form.Input
+                name="cp"
+                placeholder="Código Postal"
+                value={formik.values.cp}
+                onChange={handleInputChange}
+                error={formik.errors.cp}
+              />
+            </div>
+            <div className="input-field"></div>
+            <div className="input-field mapa">
+              <label>Ubicación en el Mapa</label>
+              <MapContainer
+                center={[address.lat, address.lon]}
+                zoom={13}
+                style={{ height: "400px", width: "100%" }}
+              >
+                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                <Marker position={[address.lat, address.lon]} icon={customIcon}>
+                  <Popup>
+                    Dirección: {address.calle}, {address.numero},{" "}
+                    {address.colonia}, {address.cp}
+                  </Popup>
+                </Marker>
+                <MapClickHandler />
+              </MapContainer>
+            </div>
+
             <div className="input-field">
               <label>
                 Contraseña <span className="astedisco">*</span>
@@ -353,6 +510,10 @@ function newSchema() {
     correo: Yup.string()
       .email("Correo electrónico inválido")
       .required("El correo es obligatorio"),
+    calle: Yup.string().required("La calle es requerida"),
+    numero: Yup.string().required("El número es requerido"),
+    colonia: Yup.string().required("La colonia es requerida"),
+    cp: Yup.string().required("El código postal es requerido"),
   };
 }
 function updateSquema() {
