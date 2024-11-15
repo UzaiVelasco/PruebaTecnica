@@ -1,0 +1,4 @@
+node_modules
+
+# Archivos relacionados a variable de entorno
+.env

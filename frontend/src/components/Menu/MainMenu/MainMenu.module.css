@@ -1,0 +1,67 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #f3f4f9; /* Asegúrate de que el fondo no sea transparente o afectado por el login */
+}
+
+.content {
+  display: flex;
+  flex: 1;
+  transition: margin-left 0.3s;
+}
+
+.sidebar {
+  width: 160px;
+  transition: width 0.3s;
+  overflow: hidden;
+}
+
+.sidebarClosed {
+  width: 0;
+}
+
+.maincontent {
+  flex: 1;
+  background-color: rgba(255, 255, 255, 0.853);
+  background-blend-mode: lighten;
+  padding: 120px 16px 0 16px;
+  min-width: 50%;
+  width: calc(100% - 160px);
+  transition: width 0.3s, margin-left 0.3s;
+}
+
+.maincontentExpanded {
+  width: 100%;
+  margin-left: 0;
+}
+
+.footer {
+  text-align: center;
+  padding: 10px;
+  font-weight: bold;
+  background-color: #f1f1f1c3;
+  font-size: 14px;
+  color: #333;
+}
+
+/* Evitar que el login afecte el MainMenu */
+body, .container {
+  padding: 0;
+  margin: 0;
+  overflow-x: hidden; /* Evita el desplazamiento lateral */
+}
+
+@media only screen and (max-width: 666px) {
+  .showSidebar {
+    display: block;
+    transform: translateX(0);
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background-color: white;
+    z-index: 999;
+    transition: transform 0.3s;
+  }
+}

@@ -1,0 +1,24 @@
+
+.nombre-top{
+    font-family: 'Montserrat-Regular', sans-serif;
+    font-size: 14px !important;
+    text-align: center;
+
+}
+.rectangulo{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: #ffffff00;
+}
+
+.tituloin{
+    font-family: 'Montserrat-Bold', sans-serif !important;
+    text-transform: uppercase;
+    border-bottom: 4px solid #2e34cabf;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+    font-size: 20px !important;
+    position: sticky;
+}
