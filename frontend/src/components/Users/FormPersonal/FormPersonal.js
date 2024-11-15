@@ -44,6 +44,16 @@ function LogicaFormPersonal(props) {
   const [personalRegistrado, setPersonalRegistrado] = useState(null);
   const [image, setImage] = useState(null);
   const [croppedImage, setCroppedImage] = useState(null);
+  const [password, setPassword] = useState(""); // Estado para almacenar la contraseña
+  const [isPasswordLoaded, setIsPasswordLoaded] = useState(false); // Para verificar que la contraseña se haya cargado
+
+  useEffect(() => {
+    if (personal && !isPasswordLoaded) {
+      setPassword(personal.password);
+      setIsPasswordLoaded(true);
+      formik.setValues(initialValues(personal, hobbies));
+    }
+  }, [personal, hobbies, isPasswordLoaded]);
 
   const [address, setAddress] = useState({
     colonia: "",
@@ -127,6 +137,14 @@ function LogicaFormPersonal(props) {
     }
   };
 
+  const MapClickHandler = () => {
+    useMapEvents({
+      click: handleMapClick,
+    });
+
+    return null;
+  };
+
   async function getHobbies() {
     try {
       const response = await axios.get(`${BASE_API}/hobbies`, {
@@ -142,13 +160,38 @@ function LogicaFormPersonal(props) {
       window.location.href = "/login";
     }
   }
-  const MapClickHandler = () => {
-    useMapEvents({
-      click: handleMapClick,
-    });
 
-    return null;
-  };
+  async function getHobbiesForPersonal(personalId) {
+    try {
+      const response = await axios.get(
+        `${BASE_API}/users/${personalId}/hobbies`,
+        {
+          headers: {
+            Authorization: `Bearer ${auth.token}`,
+          },
+        }
+      );
+      return response.data; // Deberías recibir un array con los hobbies asociados al personal.
+    } catch (error) {
+      console.error("Error fetching hobbies:", error);
+      return []; // En caso de error, devuelve un array vacío.
+    }
+  }
+
+  useEffect(() => {
+    if (personal) {
+      const fetchHobbies = async () => {
+        const hobbiesData = await getHobbiesForPersonal(personal.id);
+        setHobbies(hobbiesData);
+        const hobbyIds = hobbiesData.map((hobby) => hobby.id);
+        formik.setValues({
+          ...formik.values,
+          hobbies: hobbyIds,
+        });
+      };
+      fetchHobbies();
+    }
+  }, [personal, auth.token]);
 
   useEffect(() => {
     getHobbies();
@@ -222,8 +265,9 @@ function LogicaFormPersonal(props) {
         Authorization: `Bearer ${auth.token}`,
         "Content-Type": "application/json",
       };
-      const response = await axios.patch(url, data, { headers });
+      const response = await axios.put(url, data, { headers });
       toast.success("Datos actualizados exitosamente");
+      window.location.href = "/gestion-personal";
       return response.data;
     } catch (error) {
       if (error.response && error.response.status === 400) {
@@ -265,6 +309,9 @@ function LogicaFormPersonal(props) {
         formValue.apellido = formatName(formValue.apellido);
         formValue.curp = formValue.curp.toUpperCase();
 
+        // Incluye la contraseña al enviar la actualización
+        formValue.password = password; // Mantén la contraseña anterior
+
         if (croppedImage) {
           const formData = new FormData();
           formData.append("file", croppedImage);
@@ -282,9 +329,7 @@ function LogicaFormPersonal(props) {
     },
   });
 
-  // Actualiza los campos del formulario cuando cambia la dirección en el mapa
   useEffect(() => {
-    // Solo actualiza si `address` tiene datos válidos
     if (address) {
       if (!isModified.calle && formik.values.calle !== address.calle) {
         formik.setFieldValue("calle", address.calle || "");
@@ -302,7 +347,6 @@ function LogicaFormPersonal(props) {
         formik.setFieldValue("codigo_postal", address.codigo_postal || "");
       }
     }
-    // Solo depende de `address` y de los campos `isModified` para evitar renderizados infinitos
   }, [address, isModified]);
 
   useEffect(() => {
@@ -433,17 +477,18 @@ function LogicaFormPersonal(props) {
               <label>
                 Hobbies <span className="astedisco">*</span>
               </label>
-              <Dropdown
+              <Form.Dropdown
+                label="Hobbies"
                 name="hobbies"
                 placeholder="Selecciona tus hobbies"
-                fluid
                 multiple
                 selection
                 options={hobbiesFormato}
-                value={formik.values.hobbies || []} // Usa un arreglo vacío si está undefined
-                onChange={(e, { name, value }) =>
-                  formik.setFieldValue(name, value)
+                value={formik.values.hobbies}
+                onChange={(e, { value }) =>
+                  formik.setFieldValue("hobbies", value)
                 }
+                error={formik.errors.hobbies}
               />
             </div>
 
@@ -647,7 +692,6 @@ function updateSquema() {
         "El formato de la CURP no es válido"
       )
       .max(18, "La CURP no debe tener más de 18 caracteres"),
-    password: Yup.string().required(true),
     correo: Yup.string().required(true),
   };
 }

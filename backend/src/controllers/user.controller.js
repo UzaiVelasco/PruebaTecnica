@@ -60,6 +60,34 @@ const getUserById = async (req, res) => {
   }
 };
 
+const getUserHobbies = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query(
+      `
+      SELECT h.id, h.descripcion 
+      FROM usuario_hobbies uh
+      JOIN hobbies h ON uh.hobbie_id = h.id
+      WHERE uh.usuario_id = $1
+    `,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No se encontraron hobbies para este usuario" });
+    }
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Error al obtener hobbies del usuario:", error);
+    res
+      .status(500)
+      .json({ message: "Error al obtener los hobbies del usuario" });
+  }
+};
+
 const registerUser = async (req, res) => {
   const {
     nombre,
@@ -308,4 +336,5 @@ module.exports = {
   getUsers,
   getUserById,
   getMe,
+  getUserHobbies,
 };

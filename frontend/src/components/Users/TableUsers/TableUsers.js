@@ -4,13 +4,15 @@ import { Tooltip } from "react-tooltip";
 import { Button, Icon } from "semantic-ui-react";
 import "./TableUsers.css";
 import { useNavigate } from "react-router-dom";
+import { BASE_API } from "../../../server/BASE_API";
 
 export function TableUsers(props) {
-  const { users, deleteUsers, updateUsers, onRefetch } = props;
+  const { users, deleteUsers, onRefetch } = props;
   const itemsPerPage = 25;
   const [currentPage, setCurrentPage] = useState(1);
   const [searchText, setSearchText] = useState("");
   const [realTimeSearch, setRealTimeSearch] = useState("");
+  const [userHobbies, setUserHobbies] = useState({});
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -59,6 +61,24 @@ export function TableUsers(props) {
     });
   };
 
+  useEffect(() => {
+    const fetchHobbies = async (userId) => {
+      try {
+        const response = await fetch(`${BASE_API}/users/${userId}/hobbies`);
+        const hobbies = await response.json();
+        setUserHobbies((prevHobbies) => ({
+          ...prevHobbies,
+          [userId]: hobbies.map((hobby) => hobby.descripcion).join(", "), // Join descriptions with a comma
+        }));
+      } catch (error) {
+        console.error("Error fetching hobbies:", error);
+      }
+    };
+    users.forEach((user) => {
+      fetchHobbies(user.id);
+    });
+  }, [users]);
+
   return (
     <div>
       <div className="buscar">
@@ -86,6 +106,7 @@ export function TableUsers(props) {
               <th>NÚMERO</th>
               <th>COLONIA</th>
               <th>CODIGO POSTAL</th>
+              <th>HOBBIES</th>
               <th>FOTO</th>
               <th>ACCIONES</th>
             </tr>
@@ -103,6 +124,7 @@ export function TableUsers(props) {
                 <td>{user.numero}</td>
                 <td>{user.colonia}</td>
                 <td>{user.codigo_postal}</td>
+                <td>{userHobbies[user.id] || "Cargando hobbies..."}</td>{" "}
                 <td></td>
                 <Actions
                   user={user}
