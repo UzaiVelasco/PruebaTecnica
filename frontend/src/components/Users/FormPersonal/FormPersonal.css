@@ -1,0 +1,64 @@
+.datos {
+    display: flex;
+    flex-wrap: wrap;
+    background-color: white;
+    margin-top: 20px;
+  }
+  
+  .input-field {
+    width: calc(33.33% - 20px); /* Establece que cada contenedor de entrada ocupe un tercio del ancho del contenedor de datos, con un espacio de 20px entre ellos */
+    padding: 10px; /* Ajusta el relleno para espaciar los campos de entrada */
+  }
+  
+  .input-field label {
+    display: block; /* Muestra la etiqueta como un bloque para que aparezca encima del campo de entrada */
+    margin-bottom: 5px; /* Agrega un pequeño espacio entre la leyenda y el campo de entrada */
+    font-family: "Montserrat-Regular", sans-serif;
+    font-size: 14px;
+  }
+  
+  .datos > * {
+    flex: 0 0 calc(33.33% - 20px); /* Calcula el ancho para tres columnas, dejando 20px de espacio entre ellas */
+    margin-left: 10px; /* El margen izquierdo ahora es solo para espaciar los elementos */
+    margin-top: 10px; /* Agrega margen superior para espaciar las filas */
+    background-color: white;
+  }
+  
+  h3 {
+    font-family: "Montserrat-Regular", sans-serif;
+    margin-left: 10px;
+  }
+  
+  .ui.form .field .ui.input input,
+  .ui.form .fields .field .ui.input input {
+    width: auto;
+  }
+  
+  .fichero {
+    border-radius: 6px;
+    box-shadow: 2px 2px 5px rgba(0.1, 0.1, 0.1, 0.2);
+    border-radius: 6px;
+    margin-top: 20px;
+    margin-right: 15px;
+    padding-bottom: 23px;
+    margin-bottom: 50px;
+    background-color: white;
+  }
+  .titulo {
+    height: 35px;  
+    align-content: center;
+  }
+  
+  .botonEnviar{
+    background-color: #008e86 !important;
+    color: white !important;
+    margin-bottom: 15px !important;
+    margin-top: 15px !important;
+  }
+  
+  .botonEliminar {
+    background-color: #c50000 !important;
+    color: white !important;
+    margin-bottom: 15px !important;
+    margin-top: 15px !important;
+  }

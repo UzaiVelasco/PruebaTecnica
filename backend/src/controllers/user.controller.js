@@ -137,15 +137,37 @@ const registerUser = async (req, res) => {
   } = req.body;
 
   try {
-    const userExists = await pool.query(
+    // Validación de correo electrónico existente
+    const emailExists = await pool.query(
       "SELECT * FROM usuarios WHERE correo = $1",
       [correo]
     );
-    if (userExists.rows.length > 0) {
+    if (emailExists.rows.length > 0) {
       return res
         .status(400)
         .json({ message: "El correo electrónico ya está registrado" });
     }
+
+    const curpExists = await pool.query(
+      "SELECT * FROM usuarios WHERE curp = $1",
+      [curp]
+    );
+    if (curpExists.rows.length > 0) {
+      return res.status(400).json({ message: "El CURP ya está registrado" });
+    }
+
+    const rfcExists = await pool.query(
+      "SELECT * FROM usuarios WHERE rfc = $1",
+      [rfc]
+    );
+    if (rfcExists.rows.length > 0) {
+      return res.status(400).json({ message: "El RFC ya está registrado" });
+    }
+
+    if (!password) {
+      return res.status(400).json({ message: "La contraseña es requerida" });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
     const result = await pool.query(
       `INSERT INTO usuarios 
@@ -170,7 +192,6 @@ const registerUser = async (req, res) => {
     );
 
     const userId = result.rows[0].id;
-
     if (hobbies && hobbies.length > 0) {
       const hobbyValues = hobbies
         .map((hobbyId) => `(${userId}, ${hobbyId})`)
@@ -179,6 +200,7 @@ const registerUser = async (req, res) => {
         `INSERT INTO usuario_hobbies (usuario_id, hobbie_id) VALUES ${hobbyValues}`
       );
     }
+
     res.status(201).json({
       message: "Usuario registrado exitosamente",
       user: result.rows[0],
@@ -207,6 +229,47 @@ const updateUser = async (req, res) => {
   } = req.body;
 
   try {
+    // Validación de correo existente en otros usuarios
+    if (correo) {
+      const emailExists = await pool.query(
+        "SELECT * FROM usuarios WHERE correo = $1 AND id != $2",
+        [correo, id]
+      );
+      if (emailExists.rows.length > 0) {
+        return res
+          .status(400)
+          .json({
+            message: "El correo electrónico ya está registrado en otro usuario",
+          });
+      }
+    }
+
+    // Validación de CURP existente en otros usuarios
+    if (curp) {
+      const curpExists = await pool.query(
+        "SELECT * FROM usuarios WHERE curp = $1 AND id != $2",
+        [curp, id]
+      );
+      if (curpExists.rows.length > 0) {
+        return res
+          .status(400)
+          .json({ message: "El CURP ya está registrado en otro usuario" });
+      }
+    }
+
+    // Validación de RFC existente en otros usuarios
+    if (rfc) {
+      const rfcExists = await pool.query(
+        "SELECT * FROM usuarios WHERE rfc = $1 AND id != $2",
+        [rfc, id]
+      );
+      if (rfcExists.rows.length > 0) {
+        return res
+          .status(400)
+          .json({ message: "El RFC ya está registrado en otro usuario" });
+      }
+    }
+
     const camposActualizados = [
       nombre,
       apellido,
@@ -246,6 +309,7 @@ const updateUser = async (req, res) => {
       });
       await Promise.all(hobbyQueries);
     }
+
     res.json({
       message: "Usuario y hobbies actualizados exitosamente",
       user: result.rows[0],

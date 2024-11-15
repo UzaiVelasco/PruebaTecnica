@@ -93,8 +93,8 @@ function Sidebarm({ closeOpen, setCloseOpen }) {
           {auth?.me?.rol === "admin" && filteredMenuItems("Alta personal") && (
             <Menu.Item
               as={Link}
-              to={"/alta-personal"}
-              active={pathname === "/alta-personal"}
+              to={"/registro-personal"}
+              active={pathname === "/registro-personal"}
               onClick={() => handleItemClick("Personal")}
             >
               <Icon name="user"></Icon>Registro de personal

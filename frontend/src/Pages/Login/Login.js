@@ -29,9 +29,7 @@ export default function Login() {
         login(token);
       } catch (error) {
         if (error.response && error.response.status === 400) {
-          toast.error("Usuario o contraseña incorrectos");
-        } else {
-          toast.error("Se produjo un error. Por favor, inténtalo de nuevo.");
+          toast.error(error.response.data.message || "Algo salió mal");
         }
       }
     },

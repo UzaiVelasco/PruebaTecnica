@@ -1,6 +1,5 @@
 const pool = require("../db");
 
-// Controlador para obtener todos los usuarios
 const getHobbies = async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM hobbies");
