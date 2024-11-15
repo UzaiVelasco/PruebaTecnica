@@ -40,10 +40,11 @@ const Header = () => {
 
   return (
     <Menu fixed="top" className="principal">
-      <Menu.Item>
+      <Menu.Item className="menu-title">
         <h4>SISTEMA DE REGISTRO PERSONAL</h4>
       </Menu.Item>
-      <Menu.Menu>
+      <Menu.Menu position="right" className="menu-right">
+        <Menu.Item className="nombre">{renderName()}</Menu.Item>
         <Dropdown
           trigger={
             <Button circular icon className="ico" onClick={handleClick}>
@@ -58,7 +59,6 @@ const Header = () => {
             <Dropdown.Item onClick={handleLogout}>Cerrar sesión</Dropdown.Item>
           </Dropdown.Menu>
         </Dropdown>
-        <Menu.Item className="nombre">{renderName()}</Menu.Item>
       </Menu.Menu>
     </Menu>
   );

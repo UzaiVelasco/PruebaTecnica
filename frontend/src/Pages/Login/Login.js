@@ -8,7 +8,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useAuth } from "../../hooks/userAuth";
 import { BASE_API } from "../../server/BASE_API.js";
-import HeaderSmall from "../../components/HeaderSmall/HeaderSmall.js";
+import styles from "./Login.module.css";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -44,50 +44,48 @@ export default function Login() {
   }, [auth, navigate]);
 
   return (
-    <div>
+    <div className={styles.loginContainer}>
+      <header className={styles.header}>Bienvenido</header>
       <div>
-        <HeaderSmall btTitulo="Ingresa" />
-        <div>
-          <Form onSubmit={formik.handleSubmit}>
-            <Form.Input
-              name="correo"
-              placeholder="Correo eléctronico"
-              value={formik.values.email}
-              onChange={formik.handleChange}
-              error={formik.errors.email}
-            />
-            <Form.Input
-              name="password"
-              type={showPassword ? "text" : "password"}
-              placeholder="Contraseña"
-              value={formik.values.password}
-              onChange={formik.handleChange}
-              error={formik.errors.password}
-              icon={{
-                name: showPassword ? "eye" : "eye slash",
-                link: true,
-                onClick: () => setShowPassword(!showPassword),
-              }}
-            />
-            <button type="submit">Iniciar sesión</button>
-          </Form>
-
-          <div style={{ display: "flex" }}>
-            <Link>¿Olvidaste tu contraseña?</Link>
-          </div>
-
-          <ToastContainer
-            position="bottom-center"
-            autoClose={1500}
-            hideProgressBar
-            newestOnTop
-            closeOnClick
-            rtl={false}
-            pauseOnFocusLoss
-            draggable
-            pauseOnHover={false}
+        <Form onSubmit={formik.handleSubmit}>
+          <Form.Input
+            name="correo"
+            placeholder="Correo electrónico"
+            value={formik.values.correo}
+            onChange={formik.handleChange}
+            error={formik.errors.correo}
           />
+          <Form.Input
+            name="password"
+            type={showPassword ? "text" : "password"}
+            placeholder="Contraseña"
+            value={formik.values.password}
+            onChange={formik.handleChange}
+            error={formik.errors.password}
+            icon={{
+              name: showPassword ? "eye" : "eye slash",
+              link: true,
+              onClick: () => setShowPassword(!showPassword),
+            }}
+          />
+          <button type="submit">Iniciar sesión</button>
+        </Form>
+
+        <div className="forgot-password">
+          <Link to="#">¿Olvidaste tu contraseña?</Link>
         </div>
+
+        <ToastContainer
+          position="bottom-center"
+          autoClose={1500}
+          hideProgressBar
+          newestOnTop
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover={false}
+        />
       </div>
       <footer>
         <p>Copyright © {currentYear} uzai velasco hernandez</p>

@@ -1,0 +1,132 @@
+/* Login.module.css */
+
+/* Reset de estilos base */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Login.module.css */
+body, .container {
+  padding: 0;
+  margin: 0;
+  overflow-x: hidden;
+}
+
+/* Contenedor principal del login */
+.loginContainer {
+  width: 100%;
+  max-width: 400px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+  padding: 40px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  transition: all 0.3s ease;
+  border: 1px solid #e0e0e0;
+}
+
+/* Header con el título */
+.header {
+  font-size: 28px;
+  color: #333;
+  font-weight: 700;
+  margin-bottom: 30px;
+  font-family: 'Georgia', serif;
+}
+
+/* Formulario */
+form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* Estilo para los campos de entrada */
+input[type="text"],
+input[type="password"] {
+  width: 100%;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 16px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Focus en inputs */
+input[type="text"]:focus,
+input[type="password"]:focus {
+  border-color: #5a9bfc;
+  outline: none;
+  box-shadow: 0 0 5px rgba(90, 155, 252, 0.3);
+}
+
+/* Estilo del botón de envío */
+button {
+  padding: 15px;
+  background-color: #5a9bfc;
+  color: white;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.3s ease;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+button:hover {
+  background-color: #4a8cc6;
+}
+
+/* Íconos de visibilidad de la contraseña */
+button[type="button"] {
+  background-color: transparent;
+  border: none;
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #777;
+  cursor: pointer;
+}
+
+/* Enlaces */
+a {
+  color: #5a9bfc;
+  font-size: 14px;
+  text-decoration: none;
+  margin-top: 10px;
+  display: inline-block;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Estilo de los errores de validación */
+.errorMessage {
+  color: #e74c3c;
+  font-size: 12px;
+  margin-top: -10px;
+}
+
+/* Footer */
+footer {
+  text-align: center;
+  font-size: 14px;
+  color: #777;
+  margin-top: 30px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+footer p {
+  font-size: 13px;
+  color: #aaa;
+}

@@ -4,6 +4,7 @@ import { useAuth } from "../../../hooks/userAuth";
 import "semantic-ui-css/semantic.min.css";
 import axios from "axios";
 import { BASE_API } from "../../../server/BASE_API";
+import style from "./InicioAdmin.module.css"; // Estilos personalizados
 
 function InicioAdmin() {
   const { auth } = useAuth();
@@ -23,6 +24,7 @@ function InicioAdmin() {
       window.location.href = "/login";
     }
   }
+
   useEffect(() => {
     getUser();
     // eslint-disable-next-line
@@ -31,24 +33,20 @@ function InicioAdmin() {
   if (!auth) {
     return <Navigate to={"/login"}></Navigate>;
   }
+
   return <HomeAdmin />;
 }
 
 function HomeAdmin() {
   const { auth } = useAuth();
   return (
-    <div>
-      <div>
-        <h1>Inicio </h1>
-      </div>
-      <div>
-        <div className="card">
-          <h2>¡Bienvenido(a)!</h2>
-          <h3>{`${auth.me.nombre} ${auth.me.apellido}`}</h3>
-          <div>
-            Tu usuario para ingresar al sistema es:
-            <strong>{`  ${auth.me.correo}`}</strong>
-          </div>
+    <div className={style.cardContainer}>
+      <div className={style.card}>
+        <h2>¡Bienvenido(a)!</h2>
+        <h3>{`${auth.me.nombre} ${auth.me.apellido}`}</h3>
+        <div>
+          Tu usuario para ingresar al sistema es:
+          <strong>{`  ${auth.me.correo}`}</strong>
         </div>
       </div>
     </div>

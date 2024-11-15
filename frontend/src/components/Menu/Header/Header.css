@@ -1,10 +1,47 @@
 .principal {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    height: 85px;
-    background-color: rgba(248, 245, 245, 0.954) !important;
-    padding: 0 10px;
-    box-sizing: border-box;
+  color: white;
+  padding: 10px 20px;
+  font-size: 16px;
+  height: 85px;
+}
+
+.menu-title {
+  flex-grow: 1;
+}
+
+.menu-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.nombre {
+  font-size: 16px;
+  font-weight: bold;
+  margin-right: 15px; 
+}
+
+.ico {
+  background-color: #ffffff;
+  color: #007bff;
+  font-size: 16px;
+}
+
+.dropdown-item {
+  padding: 10px;
+}
+
+/* Responsividad para el header en pantallas pequeñas */
+@media (max-width: 768px) {
+  .principal {
+    padding: 8px 15px;
   }
+
+  .nombre {
+    display: none !important; 
+  }
+
+  .ico {
+    font-size: 14px;
+  }
+}
